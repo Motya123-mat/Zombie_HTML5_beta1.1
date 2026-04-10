@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🧟 Zombie Gin Zar</title>
+    <style>
+        :root{--bg-dark:#0d1a0d;--bg-main:#152415;--bg-card:#1e3220;--bg-light:#2a4a2e;--accent:#4a9a4a;--accent-light:#6aba6a;--gold:#ffd700;--rainbow:#ff9ff3;--danger:#e74c3c;--text:#e8f5e8;--text-dim:#8fa88f;--radius:16px}
+        *{box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;margin:0;padding:0;user-select:none;-webkit-tap-highlight-color:transparent}
+        body{background:var(--bg-dark);min-height:100vh;min-height:100dvh;display:flex;justify-content:center}
+        #app{width:100%;max-width:480px;height:100vh;height:100dvh;background:linear-gradient(180deg,var(--bg-main) 0%,var(--bg-dark) 100%);display:flex;flex-direction:column;overflow:hidden;position:relative}
+        #header{background:linear-gradient(180deg,var(--bg-light),var(--bg-card));padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--accent);flex-shrink:0}
+        .player-info{display:flex;align-items:center;gap:10px}
+        .avatar{font-size:32px}
+        .player-details{display:flex;flex-direction:column}
+        .player-name{font-weight:700;font-size:14px;color:var(--text)}
+        .player-level{font-size:11px;color:var(--accent-light)}
+        .currencies{display:flex;gap:10px}
+        .currency{background:rgba(0,0,0,0.4);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px}
+        .currency.gold{color:var(--gold);border:1px solid rgba(255,215,0,0.3)}
+        .currency.rainbow{color:var(--rainbow);border:1px solid rgba(255,159,243,0.3)}
+        #nav{display:flex;background:var(--bg-card);padding:8px;gap:4px;overflow-x:auto;border-bottom:2px solid rgba(74,154,74,0.3);flex-shrink:0;scrollbar-width:none}
+        #nav::-webkit-scrollbar{display:none}
+        .nav-btn{flex:0 0 auto;background:var(--bg-light);border:none;color:var(--text-dim);padding:10px 16px;font-size:14px;border-radius:12px;cursor:pointer;transition:all 0.2s}
+        .nav-btn.active{background:linear-gradient(145deg,var(--accent),var(--accent-light));color:#fff;box-shadow:0 4px 15px rgba(74,154,74,0.4)}
+        #content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;color:var(--text);scroll-behavior:smooth}
+        #content::-webkit-scrollbar{width:4px}
+        #content::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+        .page{display:none;animation:fadeIn 0.3s ease}
+        .page.active{display:block}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .section-title{font-size:16px;font-weight:700;color:var(--accent-light);margin-bottom:12px}
+        .card{background:var(--bg-card);border:2px solid rgba(74,154,74,0.3);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+        .card.highlight{border-color:var(--gold);background:linear-gradient(145deg,var(--bg-card),rgba(255,215,0,0.05))}
+        .btn{background:linear-gradient(145deg,var(--accent),#3a8a3a);border:none;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s}
+        .btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(74,154,74,0.4)}
+        .btn:active{transform:scale(0.98)}
+        .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+        .btn.full{width:100%}
+        .btn.danger{background:linear-gradient(145deg,var(--danger),#c0392b)}
+        .btn.gold{background:linear-gradient(145deg,#c9a227,#a08020)}
+        .btn.rainbow{background:linear-gradient(90deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3);background-size:300% 100%;animation:rainbow 3s linear infinite}
+        .btn.secondary{background:var(--bg-light);border:2px solid var(--accent)}
+        @keyframes rainbow{0%{background-position:0 50%}100%{background-position:300% 50%}}
+        .mode-card{background:linear-gradient(145deg,var(--bg-card),var(--bg-light));border:2px solid rgba(74,154,74,0.4);border-radius:var(--radius);padding:18px;margin-bottom:10px;cursor:pointer;transition:all 0.25s;display:flex;align-items:center;gap:14px}
+        .mode-card:hover{transform:translateX(8px);border-color:var(--accent-light)}
+        .mode-card:active{transform:scale(0.98)}
+        .mode-icon{font-size:36px}
+        .mode-info{flex:1}
+        .mode-name{font-size:16px;font-weight:700;color:var(--text)}        .mode-desc{font-size:12px;color:var(--text-dim);margin-top:2px}
+        .mode-reward{font-size:11px;color:var(--gold);margin-top:4px}
+        .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+        .item-card{background:var(--bg-card);border:2px solid rgba(74,154,74,0.3);border-radius:14px;padding:14px;text-align:center;transition:all 0.2s}
+        .item-card:hover{transform:translateY(-4px);border-color:var(--accent-light)}
+        .item-card.owned{border-color:var(--accent);background:linear-gradient(145deg,var(--bg-card),rgba(74,154,74,0.1))}
+        .item-card.limited{border-color:var(--rainbow);background:linear-gradient(145deg,#2a1a3a,#1a102a)}
+        .item-icon{font-size:36px;margin-bottom:8px}
+        .item-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+        .item-stats{font-size:10px;color:var(--text-dim);margin-bottom:8px}
+        .item-price{font-size:12px;font-weight:700;margin-bottom:10px}
+        .item-price.gold{color:var(--gold)}
+        .item-price.rainbow{color:var(--rainbow)}
+        .item-btn{width:100%;padding:8px;font-size:11px;border-radius:10px}
+        .progress-bar{height:10px;background:var(--bg-dark);border-radius:5px;overflow:hidden;margin:8px 0}
+        .progress-fill{height:100%;border-radius:5px;transition:width 0.4s ease}
+        .progress-fill.green{background:linear-gradient(90deg,var(--accent),var(--accent-light))}
+        .progress-fill.red{background:linear-gradient(90deg,#e74c3c,#c0392b)}
+        .progress-fill.gold{background:linear-gradient(90deg,#ffd700,#f39c12)}
+        .battle-area{background:linear-gradient(180deg,#1a1a1a,#0a0a0a);border:3px solid #444;border-radius:20px;padding:24px;text-align:center;margin:16px 0;position:relative}
+        .zombie-sprite{font-size:100px;animation:zombiePulse 1s infinite}
+        @keyframes zombiePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+        .zombie-name{font-size:14px;color:#aaa;margin-bottom:4px}
+        .zombie-hp{font-size:12px;color:#e74c3c;margin-top:8px}
+        .hp-bar{height:20px;background:#1a1a1a;border-radius:10px;overflow:hidden;margin:10px 0;border:2px solid #333}
+        .hp-fill{height:100%;background:linear-gradient(90deg,#e74c3c,#c0392b);transition:width 0.15s ease}
+        .weapon-bar{display:flex;gap:8px;overflow-x:auto;padding:12px 0;margin:12px 0}
+        .weapon-bar::-webkit-scrollbar{display:none}
+        .weapon-slot{flex:0 0 auto;width:90px;background:var(--bg-card);border:2px solid rgba(74,154,74,0.4);border-radius:14px;padding:10px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+        .weapon-slot.selected{background:var(--accent);border-color:var(--accent-light);transform:scale(1.05)}
+        .weapon-slot.broken{opacity:0.4;border-color:var(--danger)}
+        .weapon-slot.cooldown{opacity:0.6}
+        .weapon-slot-icon{font-size:24px}
+        .weapon-slot-name{font-size:9px;color:var(--text-dim);margin-top:4px}
+        .weapon-slot-cd{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18px;font-weight:800;color:#fff;text-shadow:0 0 10px #000;z-index:2}
+        .weapon-dur{height:4px;background:#1a1a1a;border-radius:2px;margin-top:6px;overflow:hidden}
+        .weapon-dur-fill{height:100%;background:var(--accent);transition:width 0.3s}
+        .weapon-dur-fill.low{background:var(--danger)}
+        .attack-btn{width:100%;background:linear-gradient(145deg,#c0392b,#e74c3c);border:3px solid #ff6b6b;color:#fff;padding:22px;border-radius:20px;font-size:26px;font-weight:800;cursor:pointer;transition:all 0.1s}
+        .attack-btn:active{transform:scale(0.95)}
+        .attack-btn:disabled{background:#444;border-color:#666}
+        .back-btn{background:rgba(255,255,255,0.1);border:none;color:var(--text-dim);padding:10px 16px;border-radius:10px;font-size:13px;cursor:pointer;margin-bottom:16px}
+        .wave-display{font-size:20px;font-weight:700;color:var(--accent-light);text-align:center;margin-bottom:8px}
+        .timer-display{font-size:36px;font-weight:800;color:var(--gold);text-align:center;animation:timerPulse 1s infinite}
+        @keyframes timerPulse{0%,100%{opacity:1}50%{opacity:0.7}}
+        .bp-header{background:linear-gradient(145deg,#1a2a4a,#0a1a3a);border:2px solid #4a6a9a;border-radius:var(--radius);padding:24px;text-align:center;margin-bottom:16px}
+        .bp-level-num{font-size:56px;font-weight:800;color:var(--gold)}
+        .bp-reward-item{background:var(--bg-dark);border:2px solid rgba(74,154,74,0.3);border-radius:14px;padding:14px;margin:10px 0;display:flex;justify-content:space-between;align-items:center}
+        .bp-reward-item.unlocked{border-color:var(--accent);background:rgba(74,154,74,0.1)}
+        .bp-reward-item.claimed{opacity:0.5}        .bp-reward-info{display:flex;align-items:center;gap:12px}
+        .bp-reward-icon{font-size:28px}
+        .daily-card{background:linear-gradient(145deg,#3a2a1a,#2a1a0a);border:2px solid #8a6a3a;border-radius:var(--radius);padding:24px;text-align:center}
+        .daily-icon{font-size:64px;margin-bottom:12px}
+        .daily-streak{font-size:14px;color:#c9a227;margin-bottom:8px}
+        .daily-reward{font-size:28px;font-weight:700;color:var(--gold);margin-bottom:16px}
+        .daily-days{display:flex;justify-content:space-around;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)}
+        .daily-day{text-align:center;opacity:0.4}
+        .daily-day.done{opacity:1}
+        .daily-day.today{opacity:1;color:var(--gold)}
+        .achieve-item{background:var(--bg-card);border:2px solid rgba(74,154,74,0.2);border-radius:14px;padding:14px;margin:10px 0;display:flex;align-items:center;gap:14px}
+        .achieve-item.unlocked{border-color:var(--gold);background:rgba(255,215,0,0.05)}
+        .achieve-item.locked{opacity:0.4}
+        .achieve-icon{font-size:36px}
+        .achieve-info{flex:1}
+        .achieve-name{font-size:14px;font-weight:600;color:var(--text)}
+        .achieve-desc{font-size:11px;color:var(--text-dim);margin-top:2px}
+        .achieve-reward{font-size:12px;color:var(--rainbow);font-weight:600}
+        .profile-header{background:linear-gradient(145deg,var(--bg-card),var(--bg-light));border:2px solid var(--accent);border-radius:20px;padding:24px;text-align:center;margin-bottom:20px}
+        .profile-avatar{font-size:80px;margin-bottom:12px}
+        .profile-name{font-size:24px;font-weight:700;color:var(--accent-light)}
+        .profile-id{font-size:11px;color:var(--text-dim);margin-top:4px}
+        .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+        .stat-item{background:rgba(0,0,0,0.3);border-radius:12px;padding:14px;text-align:center}
+        .stat-value{font-size:22px;font-weight:700;color:var(--gold)}
+        .stat-label{font-size:10px;color:var(--text-dim);margin-top:4px}
+        .input{width:100%;background:var(--bg-dark);border:2px solid rgba(74,154,74,0.3);color:var(--text);padding:14px;border-radius:12px;font-size:16px}
+        .input:focus{outline:none;border-color:var(--accent)}
+        .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-120%);background:var(--bg-card);border:2px solid var(--accent);color:var(--text);padding:14px 28px;border-radius:30px;font-size:14px;font-weight:600;z-index:9999;transition:transform 0.4s cubic-bezier(0.68,-0.55,0.27,1.55);max-width:90%;text-align:center}
+        .toast.show{transform:translateX(-50%) translateY(0)}
+        .toast.error{border-color:var(--danger);background:#3a1a1a}
+        .toast.gold{border-color:var(--gold)}
+        .announcement{position:fixed;top:0;left:0;right:0;background:linear-gradient(90deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3);background-size:400% 100%;animation:annBg 10s linear infinite;color:#000;padding:12px 44px 12px 16px;font-size:13px;font-weight:600;text-align:center;z-index:9998;display:none}
+        .announcement.show{display:block}
+        @keyframes annBg{0%{background-position:0 50%}100%{background-position:400% 50%}}
+        .announcement .close{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.2);border:none;color:#000;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:16px}
+        .maintenance{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(145deg,#1a1a2e,#0a0a1e);display:none;flex-direction:column;justify-content:center;align-items:center;color:#fff;text-align:center;padding:24px;z-index:99998}
+        .maintenance.show{display:flex}
+        .maintenance h1{font-size:42px;margin-bottom:20px;color:var(--gold)}
+        .banned{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0000;display:none;flex-direction:column;justify-content:center;align-items:center;color:#ff4444;text-align:center;padding:24px;z-index:99999}
+        .banned.show{display:flex}
+        .banned h1{font-size:36px;margin-bottom:16px}
+        .save-indicator{position:fixed;bottom:20px;right:20px;background:var(--accent);color:#fff;padding:8px 14px;border-radius:14px;font-size:11px;font-weight:600;opacity:0;transition:opacity 0.3s;z-index:9997}
+        .save-indicator.show{opacity:1}
+        .version-box{text-align:center;font-size:10px;color:var(--text-dim);margin-top:24px;padding:12px;background:rgba(0,0,0,0.2);border-radius:12px}
+        .combo-display{position:absolute;top:10px;right:10px;background:rgba(255,215,0,0.2);border:2px solid var(--gold);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gold)}
+        .damage-popup{position:absolute;font-size:24px;font-weight:800;color:#ff6b6b;text-shadow:0 0 10px rgba(255,0,0,0.5);animation:damageFloat 0.8s ease-out forwards;pointer-events:none}
+        @keyframes damageFloat{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
+    </style>
+</head><body>
+    <div class="maintenance" id="maintenance"><h1>🔧 Техработы</h1><p id="maint-reason">Сервер временно недоступен</p></div>
+    <div class="banned" id="banned"><h1>🚫 ЗАБЛОКИРОВАНО</h1><p>Бан на 5 лет</p><div id="ban-timer"></div></div>
+    <div class="announcement" id="announcement"><span id="ann-text"></span><button class="close" id="close-ann">✕</button></div>
+    <div class="toast" id="toast"></div>
+    <div class="save-indicator" id="save-ind">💾 Сохранено</div>
+    <div id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+var VERSION = '1.1.0';
+var SAVE_KEY = 'zgz_save';
+var OLD_SAVE_KEY = 'zgz_beta_v1';
+var GLOBAL_KEY = 'zgz_global';
+var BAN_KEY = 'zgz_ban';
+
+var WEAPONS = [
+    {id:0,n:'Кухонный нож',i:'🔪',p:0,r:0,d:12,m:-1,cd:600},
+    {id:1,n:'Дубина',i:'🏏',p:800,r:0,d:35,m:120,cd:1200},
+    {id:2,n:'Мачете',i:'🔪',p:600,r:0,d:28,m:100,cd:900},
+    {id:3,n:'Меч',i:'⚔️',p:1500,r:0,d:45,m:150,cd:1100},
+    {id:4,n:'Топор',i:'🪓',p:2000,r:0,d:60,m:140,cd:1500},
+    {id:5,n:'Копьё',i:'🗡️',p:2500,r:0,d:55,m:180,cd:1300},
+    {id:6,n:'Булава',i:'⚔️',p:1800,r:0,d:50,m:130,cd:1400},
+    {id:7,n:'Лук',i:'🏹',p:3500,r:0,d:40,m:200,cd:1000},
+    {id:8,n:'Бумеранг',i:'🪃',p:2200,r:0,d:32,m:180,cd:2000},
+    {id:9,n:'Пистолет',i:'🔫',p:8000,r:0,d:70,m:250,cd:700},
+    {id:10,n:'Автомат',i:'🔫',p:25000,r:0,d:55,m:350,cd:300},
+    {id:11,n:'Дробовик',i:'🔫',p:45000,r:0,d:150,m:200,cd:1100},
+    {id:12,n:'Снайперка',i:'🎯',p:75000,r:0,d:400,m:180,cd:2500},
+    {id:13,n:'РПГ',i:'🚀',p:400000,r:0,d:1200,m:40,cd:4000},
+    {id:14,n:'Миниган',i:'⚙️',p:800000,r:0,d:85,m:800,cd:150},
+    {id:15,n:'Тесла-пушка',i:'⚡',p:500000,r:0,d:120,m:300,cd:250},
+    {id:16,n:'Ледяной посох',i:'❄️',p:350000,r:0,d:90,m:280,cd:500},
+    {id:17,n:'Огненный шар',i:'🔥',p:450000,r:0,d:180,m:220,cd:700},
+    {id:18,n:'Радужный дробовик',i:'🌈',p:0,r:120,d:600,m:400,cd:900},
+    {id:19,n:'Драконий меч',i:'🐉',p:0,r:180,d:450,m:500,cd:1200},
+    {id:20,n:'Меч молнии',i:'⚡',p:0,r:220,d:550,m:450,cd:1000},
+    {id:21,n:'Конфетный меч',i:'🍬',p:0,r:0,d:80,m:250,cd:800}
+];
+
+var ZOMBIES = [
+    {id:0,n:'Зомби-бродяга',i:'🧟',hp:80,dmg:8,c:12,x:4,rb:0},
+    {id:1,n:'Зомби-бегун',i:'🏃',hp:60,dmg:12,c:18,x:6,rb:0},
+    {id:2,n:'Зомби-толстяк',i:'🧟‍♂️',hp:250,dmg:20,c:35,x:12,rb:1},
+    {id:3,n:'Зомби-мутант',i:'👹',hp:450,dmg:40,c:70,x:22,rb:2},
+    {id:4,n:'МЕГАБОСС',i:'💀',hp:4000,dmg:80,c:400,x:180,rb:15}
+];
+var BP_REWARDS = [
+    {l:1,x:40,t:'c',v:800,i:'💰',d:'800 монет'},
+    {l:2,x:90,t:'c',v:1500,i:'💰',d:'1500 монет'},
+    {l:3,x:160,t:'r',v:15,i:'🌈',d:'15 Rainbow'},
+    {l:4,x:250,t:'c',v:3000,i:'💰',d:'3000 монет'},
+    {l:5,x:380,t:'w',v:16,i:'❄️',d:'Ледяной посох'},
+    {l:6,x:520,t:'c',v:6000,i:'💰',d:'6000 монет'},
+    {l:7,x:700,t:'r',v:35,i:'🌈',d:'35 Rainbow'},
+    {l:8,x:900,t:'w',v:17,i:'🔥',d:'Огненный шар'},
+    {l:9,x:1200,t:'c',v:15000,i:'💰',d:'15000 монет'},
+    {l:10,x:1600,t:'w',v:20,i:'⚡',d:'Меч молнии'}
+];
+
+var ACHIEVEMENTS = [
+    {id:'k1',i:'🎯',n:'Первая кровь',d:'Убей 1 зомби',k:'kills',g:1,r:5},
+    {id:'k50',i:'💯',n:'Полтинник',d:'Убей 50 зомби',k:'kills',g:50,r:10},
+    {id:'k500',i:'🏆',n:'Охотник',d:'Убей 500 зомби',k:'kills',g:500,r:25},
+    {id:'w10',i:'🌊',n:'Волна 10',d:'Дойди до 10 волны',k:'maxWave',g:10,r:15},
+    {id:'w30',i:'🌊',n:'Волна 30',d:'Дойди до 30 волны',k:'maxWave',g:30,r:30},
+    {id:'b1',i:'👹',n:'Убийца босса',d:'Убей босса',k:'bossKills',g:1,r:20},
+    {id:'m100k',i:'💎',n:'Богач',d:'Накопи 100000',k:'money',g:100000,r:15},
+    {id:'w10c',i:'⚔️',n:'Арсенал',d:'Собери 10 оружий',k:'weaponCount',g:10,r:30}
+];
+
+var MODES = [
+    {id:'surv',n:'Выживание',i:'🛡️',d:'Бесконечные волны',rw:'💰+🌈'},
+    {id:'boss',n:'Охота на босса',i:'👹',d:'5 волн + Босс',rw:'🌈+15'},
+    {id:'time',n:'На время',i:'⏱️',d:'60 секунд',rw:'💰x2'},
+    {id:'night',n:'Кошмар',i:'🌙',d:'Сильные зомби',rw:'🌈x2'},
+    {id:'arena',n:'Арена',i:'🏟️',d:'Быстрые волны',rw:'⚡XP'}
+];
+
+var DAILY = [150,300,500,800,1200,1800,2500];
+
+var P = null;
+var B = {on:false,mode:null,wave:0,z:null,sel:0,cds:{},tmr:null,time:60,combo:0,lastHit:0};
+
+function $(id){ return document.getElementById(id); }
+
+function getGlobal(){
+    try{ return JSON.parse(localStorage.getItem(GLOBAL_KEY)) || {ann:null,promo:[],maint:null}; }
+    catch(e){ return {ann:null,promo:[],maint:null}; }
+}
+
+function toast(m,t){
+    var e = $('toast');
+    if(!e) return;
+    e.textContent = m;
+    e.className = 'toast ' + (t||'') + ' show';    setTimeout(function(){ e.classList.remove('show'); }, 2800);
+}
+
+function saveGame(){
+    if(!P) return;
+    P.lastSave = Date.now();
+    P.version = VERSION;
+    try{
+        localStorage.setItem(SAVE_KEY, JSON.stringify(P));
+        var ind = $('save-ind');
+        if(ind){
+            ind.classList.add('show');
+            setTimeout(function(){ ind.classList.remove('show'); }, 1200);
+        }
+    }catch(e){ console.error('Save failed:', e); }
+}
+
+function loadGame(){
+    try{
+        var d = localStorage.getItem(SAVE_KEY);
+        if(d) return JSON.parse(d);
+        var old = localStorage.getItem(OLD_SAVE_KEY);
+        if(old) return migrateOldSave(JSON.parse(old));
+        return null;
+    }catch(e){ console.error('Load failed:', e); return null; }
+}
+
+function migrateOldSave(old){
+    var np = newPlayer();
+    console.log('🔄 Миграция данных из Beta 1.0...');
+    
+    if(old.id) np.id = old.id;
+    if(old.name) np.name = old.name;
+    if(old.avatar) np.avatar = old.avatar;
+    if(old.money) np.money = old.money;
+    if(old.rainbowMoney !== undefined) np.rainbow = old.rainbowMoney;
+    else if(old.rainbow !== undefined) np.rainbow = old.rainbow;
+    if(old.level) np.lvl = old.level;
+    else if(old.lvl) np.lvl = old.lvl;
+    if(old.exp) np.xp = old.exp;
+    else if(old.xp) np.xp = old.xp;
+    if(old.totalKills) np.kills = old.totalKills;
+    else if(old.kills) np.kills = old.kills;
+    if(old.bossKills) np.bossKills = old.bossKills;
+    if(old.maxWave) np.maxWave = old.maxWave;
+    if(old.usedPromos) np.usedPromo = old.usedPromos;
+    else if(old.usedPromo) np.usedPromo = old.usedPromo;
+    if(old.achievements) np.achieve = old.achievements;
+    else if(old.achieve) np.achieve = old.achieve;
+    if(old.created) np.created = old.created;    
+    // Миграция оружия
+    if(old.weapons && old.weapons.length > 0){
+        np.weapons = [];
+        for(var i=0;i<old.weapons.length;i++){
+            var ow = old.weapons[i];
+            if(typeof ow === 'object'){
+                if(ow.id !== undefined){
+                    np.weapons.push({id: ow.id, dur: ow.dur !== undefined ? ow.dur : (ow.durability || 999)});
+                }else if(ow.name){
+                    var idx = WEAPONS.findIndex(w => w.n === ow.name);
+                    if(idx>=0) np.weapons.push({id: idx, dur: ow.durability !== undefined ? ow.durability : 999});
+                }
+            }else if(typeof ow === 'number'){
+                np.weapons.push({id: ow, dur: WEAPONS[ow] ? WEAPONS[ow].m : 999});
+            }
+        }
+        if(np.weapons.length===0) np.weapons = [{id:0,dur:-1},{id:21,dur:250}];
+    }
+    
+    if(old.battlePass){
+        var bp = old.battlePass;
+        np.bp = {
+            lvl: bp.level || bp.lvl || 0,
+            xp: bp.xp || 0,
+            claimed: bp.claimed || bp.rewardsClaimed || []
+        };
+    }
+    if(old.dailyBonus || old.daily){
+        var db = old.dailyBonus || old.daily;
+        np.daily = { last: db.last || db.lastDailyBonus || 0, streak: db.streak || 0 };
+    }
+    
+    console.log('✅ Миграция завершена!');
+    return np;
+}
+
+function fmt(n){
+    if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+    if(n>=1e3) return (n/1e3).toFixed(1)+'K';
+    return String(n);
+}
+
+function checkBan(){
+    try{
+        var b = localStorage.getItem(BAN_KEY);
+        if(b){
+            var ban = JSON.parse(b);
+            if(ban.until > Date.now()){
+                $('banned').classList.add('show');                $('app').style.display = 'none';
+                return true;
+            }
+            localStorage.removeItem(BAN_KEY);
+        }
+    }catch(e){}
+    return false;
+}
+
+function checkMaint(){
+    var g = getGlobal();
+    var app = $('app');
+    var el = $('maintenance');
+    if(g.maint && g.maint.on){
+        el.classList.add('show');
+        $('maint-reason').textContent = g.maint.reason || 'Техработы';
+        if(app) app.style.display = 'none';
+        return true;
+    }
+    el.classList.remove('show');
+    if(app) app.style.display = 'flex';
+    return false;
+}
+
+function checkAnn(){
+    var g = getGlobal();
+    var el = $('announcement');
+    var txt = $('ann-text');
+    if(!el || !txt) return;
+    if(g.ann && g.ann.text){
+        var last = localStorage.getItem('zgz_last_ann');
+        if(last !== String(g.ann.ts)){
+            txt.textContent = g.ann.text;
+            el.classList.add('show');
+        }
+    }else{
+        el.classList.remove('show');
+    }
+}
+
+function newPlayer(){
+    return {
+        id: 'ZGZ_' + Math.random().toString(36).substr(2,8).toUpperCase(),
+        name: 'Survivor', avatar: '🧟', money: 300, rainbow: 5,
+        lvl: 1, xp: 0, weapons: [{id:0,dur:-1},{id:21,dur:250}],
+        kills: 0, bossKills: 0, maxWave: 0, games: 0,
+        usedPromo: [], achieve: [],
+        bp: {lvl:0,xp:0,claimed:[]},
+        daily: {last:0,streak:0},
+        created: Date.now(), lastSave: Date.now(), version: VERSION    };
+}
+
+function render(){
+    try{
+        var app = $('app');
+        if(!app) return;
+        app.innerHTML = '<div id="header"><div class="player-info"><div class="avatar" id="h-avatar">'+P.avatar+'</div><div class="player-details"><div class="player-name" id="h-name">'+P.name+'</div><div class="player-level">Уровень '+P.lvl+'</div></div></div><div class="currencies"><div class="currency gold">💰 <span id="h-money">'+fmt(P.money)+'</span></div><div class="currency rainbow">🌈 <span id="h-rainbow">'+P.rainbow+'</span></div></div></div><div id="nav"></div><div id="content"></div>';
+        
+        var nav = $('nav');
+        var tabs = ['home','shop','limited','inv','bp','achieve','daily','promo','profile'];
+        var icons = ['🏠','🛒','✨','🎒','🎖️','🏆','🎁','🎟️','👤'];
+        
+        var navHtml = '', pagesHtml = '';
+        for(var i=0;i<tabs.length;i++){
+            navHtml += '<button class="nav-btn'+(i===0?' active':'')+'" data-p="'+tabs[i]+'">'+icons[i]+'</button>';
+            pagesHtml += '<div class="page'+(i===0?' active':'')+'" id="p-'+tabs[i]+'"></div>';
+        }
+        pagesHtml += '<div class="page" id="p-battle"></div>';
+        nav.innerHTML = navHtml;
+        $('content').innerHTML = pagesHtml;
+        
+        nav.onclick = function(e){
+            var btn = e.target.closest('.nav-btn');
+            if(btn) goPage(btn.getAttribute('data-p'));
+        };
+        
+        renderAll();
+    }catch(e){ console.error('Render failed:', e); }
+}
+
+function goPage(p){
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-p')===p));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    var el = $('p-'+p);
+    if(el) el.classList.add('active');
+}
+
+function updHeader(){
+    var m=$('h-money'), r=$('h-rainbow');
+    if(m) m.textContent=fmt(P.money);
+    if(r) r.textContent=P.rainbow;
+}
+
+function renderAll(){
+    renderHome(); renderShop(); renderLimited(); renderInv(); renderBP(); renderAchieve(); renderDaily(); renderPromo(); renderProfile();
+}
+
+function renderHome(){
+    var el=$('p-home'); if(!el) return;    var h='<div class="section-title">🎮 Режимы игры</div>';
+    MODES.forEach(m => {
+        h += '<div class="mode-card" data-mode="'+m.id+'"><div class="mode-icon">'+m.i+'</div><div class="mode-info"><div class="mode-name">'+m.n+'</div><div class="mode-desc">'+m.d+'</div><div class="mode-reward">'+m.rw+'</div></div></div>';
+    });
+    h += '<div class="card highlight"><div style="text-align:center;"><div style="font-size:13px;color:var(--text-dim);">Уровень</div><div style="font-size:42px;font-weight:800;color:var(--accent-light);">'+P.lvl+'</div><div class="progress-bar"><div class="progress-fill green" style="width:'+(P.xp/(P.lvl*80)*100)+'%"></div></div><div style="font-size:11px;color:var(--text-dim);">'+P.xp+' / '+(P.lvl*80)+' XP</div></div></div>';
+    h += '<div class="card"><div style="display:flex;justify-content:space-around;text-align:center;"><div><div style="font-size:22px;font-weight:700;color:var(--gold);">'+P.kills+'</div><div style="font-size:10px;color:var(--text-dim);">Убийств</div></div><div><div style="font-size:22px;font-weight:700;color:var(--gold);">'+P.maxWave+'</div><div style="font-size:10px;color:var(--text-dim);">Макс волна</div></div><div><div style="font-size:22px;font-weight:700;color:var(--gold);">'+P.games+'</div><div style="font-size:10px;color:var(--text-dim);">Игр</div></div></div></div>';
+    h += '<div class="version-box">🧟 Zombie Gin Zar v'+VERSION+'</div>';
+    el.innerHTML = h;
+    el.onclick = function(e){ var card=e.target.closest('.mode-card'); if(card) startBattle(card.getAttribute('data-mode')); };
+}
+
+function renderShop(){
+    var el=$('p-shop'); if(!el) return;
+    var h='<div class="section-title">🛒 Магазин оружия</div><div class="grid">';
+    for(var i=0;i<WEAPONS.length;i++){
+        var w=WEAPONS[i]; if(w.p<=0) continue;
+        var own = P.weapons.some(pw => pw.id===w.id);
+        var canBuy = P.money >= w.p && !own;
+        h += '<div class="item-card'+(own?' owned':'')+'"><div class="item-icon">'+w.i+'</div><div class="item-name">'+w.n+'</div><div class="item-stats">⚔️ '+w.d+' | ⏱️ '+(w.cd/1000).toFixed(1)+'с</div><div class="item-price gold">💰 '+fmt(w.p)+'</div><button class="btn item-btn'+(own?' secondary':'')+'" data-buyid="'+w.id+'"'+(canBuy?'':' disabled')+'>'+(own?'✓ Есть':'Купить')+'</button></div>';
+    }
+    h += '</div>';
+    el.innerHTML = h;
+    
+    // Исправленный обработчик покупок
+    el.onclick = function(e){
+        var btn = e.target.closest('[data-buyid]');
+        if(btn && !btn.disabled) buyWeapon(parseInt(btn.getAttribute('data-buyid')));
+    };
+}
+
+function renderLimited(){
+    var el=$('p-limited'); if(!el) return;
+    var h='<div class="section-title">✨ Лимитированное оружие</div><div class="grid">';
+    for(var i=0;i<WEAPONS.length;i++){
+        var w=WEAPONS[i]; if(w.r<=0) continue;
+        var own = P.weapons.some(pw => pw.id===w.id);
+        var canBuy = P.rainbow >= w.r && !own;
+        h += '<div class="item-card limited'+(own?' owned':'')+'"><div class="item-icon">'+w.i+'</div><div class="item-name">'+w.n+'</div><div class="item-stats">⚔️ '+w.d+'</div><div class="item-price rainbow">🌈 '+w.r+'</div><button class="btn item-btn rainbow" data-buyr="'+w.id+'"'+(canBuy?'':' disabled')+'>'+(own?'✓ Есть':'Купить')+'</button></div>';
+    }
+    h += '</div>';
+    el.innerHTML = h;
+    el.onclick = function(e){
+        var btn = e.target.closest('[data-buyr]');
+        if(btn && !btn.disabled) buyWeaponR(parseInt(btn.getAttribute('data-buyr')));
+    };
+}
+
+function renderInv(){
+    var el=$('p-inv'); if(!el) return;
+    var h='<div class="section-title">🎒 Инвентарь ('+P.weapons.length+')</div><div class="grid">';    for(var i=0;i<P.weapons.length;i++){
+        var pw=P.weapons[i], w=WEAPONS.find(x=>x.id===pw.id);
+        if(!w) continue;
+        var pct = w.m===-1 ? 100 : (pw.dur/w.m)*100;
+        var low = pct<30, broken = w.m!==-1 && pw.dur<=0;
+        h += '<div class="item-card"><div class="item-icon">'+w.i+'</div><div class="item-name">'+w.n+'</div><div class="item-stats">⚔️ '+w.d+'</div>';
+        if(w.m!==-1){
+            h += '<div class="progress-bar" style="height:6px;"><div class="progress-fill '+(low?'red':'green')+'" style="width:'+pct+'%"></div></div><div style="font-size:10px;color:'+(low?'var(--danger)':'var(--text-dim)')+';">'+pw.dur+'/'+w.m+'</div>';
+            if(broken||low) h += '<button class="btn item-btn gold" data-rep="'+i+'">🔧 '+Math.ceil((w.m-pw.dur)*1.5)+'💰</button>';
+        }else h += '<div style="font-size:10px;color:var(--accent);">♾️ Вечное</div>';
+        h += '</div>';
+    }
+    h += '</div>';
+    el.innerHTML = h;
+    el.onclick = function(e){
+        var btn = e.target.closest('[data-rep]');
+        if(btn) repairWeapon(parseInt(btn.getAttribute('data-rep')));
+    };
+}
+
+function renderBP(){
+    var el=$('p-bp'); if(!el) return;
+    var bp=P.bp, nextR=BP_REWARDS.find(r=>r.l>bp.lvl);
+    var pct = nextR ? (bp.xp/nextR.x)*100 : 100;
+    var h = '<div class="bp-header"><div style="font-size:12px;color:#8fa0bf;">🎖️ BATTLE PASS</div><div class="bp-level-num">'+bp.lvl+'</div><div style="font-size:14px;color:#aaa;">уровень</div><div class="progress-bar" style="height:14px;margin-top:12px;"><div class="progress-fill gold" style="width:'+Math.min(100,pct)+'%"></div></div><div style="font-size:12px;color:#8fa0bf;">'+bp.xp+' / '+(nextR?nextR.x:'MAX')+' XP</div></div>';
+    h += '<div class="section-title">🎁 Награды</div>';
+    BP_REWARDS.forEach(r => {
+        var unlocked=bp.lvl>=r.l, claimed=bp.claimed.includes(r.l), canClaim=unlocked&&!claimed;
+        h += '<div class="bp-reward-item'+(unlocked?' unlocked':'')+(claimed?' claimed':'')+'"><div class="bp-reward-info"><div class="bp-reward-icon">'+r.i+'</div><div><div style="font-size:11px;color:var(--text-dim);">Уровень '+r.l+'</div><div style="font-size:13px;font-weight:600;">'+r.d+'</div></div></div><button class="btn" style="padding:8px 14px;font-size:12px;" data-bpclaim="'+r.l+'"'+(canClaim?'':' disabled')+'>'+(claimed?'✓':unlocked?'Забрать':'🔒')+'</button></div>';
+    });
+    el.innerHTML = h;
+    el.onclick = function(e){
+        var btn = e.target.closest('[data-bpclaim]');
+        if(btn && !btn.disabled) claimBP(parseInt(btn.getAttribute('data-bpclaim')));
+    };
+}
+
+function renderAchieve(){
+    var el=$('p-achieve'); if(!el) return;
+    var h='<div class="section-title">🏆 Достижения</div>';
+    ACHIEVEMENTS.forEach(a => {
+        var prog = a.k==='kills'?P.kills:a.k==='maxWave'?P.maxWave:a.k==='bossKills'?P.bossKills:a.k==='money'?P.money:a.k==='weaponCount'?P.weapons.length:0;
+        var done=prog>=a.g, has=P.achieve.includes(a.id), pct=Math.min(100,(prog/a.g)*100);
+        h += '<div class="achieve-item'+(done?' unlocked':' locked')+'"><div class="achieve-icon">'+a.i+'</div><div class="achieve-info"><div class="achieve-name">'+a.n+(has?' ✅':'')+'</div><div class="achieve-desc">'+a.d+'</div><div class="progress-bar" style="height:5px;"><div class="progress-fill '+(done?'gold':'green')+'" style="width:'+pct+'%"></div></div><div style="font-size:10px;color:var(--text-dim);">'+prog+'/'+a.g+'</div></div><div class="achieve-reward">+'+a.r+'🌈</div></div>';
+    });
+    el.innerHTML = h;
+}
+
+function renderDaily(){
+    var el=$('p-daily'); if(!el) return;    var today=new Date().setHours(0,0,0,0), lastDay=new Date(P.daily.last||0).setHours(0,0,0,0);
+    var canClaim = lastDay < today, streak = P.daily.streak||0;
+    var reward = DAILY[Math.min(streak, 6)], rainbowB = streak >= 6 ? 5 : 0;
+    var h = '<div class="section-title">🎁 Ежедневный бонус</div><div class="daily-card"><div class="daily-icon">🎁</div><div class="daily-streak">🔥 Серия: '+streak+' '+(streak===1?'день':streak<5?'дня':'дней')+'</div><div class="daily-reward">+'+reward+' 💰'+(rainbowB?' +'+rainbowB+' 🌈':'')+'</div><button class="btn'+(canClaim?'':' secondary')+'" id="claim-daily"'+(canClaim?'':' disabled')+'>'+(canClaim?'Забрать награду':'Уже получено')+'</button><div class="daily-days">';
+    DAILY.forEach((v,i) => { h += '<div class="daily-day'+(i<streak?' done':'')+(i===streak&&canClaim?' today':'')+'"><div class="daily-day-num">День '+(i+1)+'</div><div class="daily-day-reward">'+v+'</div></div>'; });
+    h += '</div></div>';
+    el.innerHTML = h;
+    if(canClaim) { var b=$('claim-daily'); if(b) b.onclick=claimDaily; }
+}
+
+function renderPromo(){
+    var el=$('p-promo'); if(!el) return;
+    el.innerHTML = '<div class="section-title">🎟️ Промокоды</div><div class="card"><input type="text" class="input" id="promo-in" placeholder="Введите промокод..." maxlength="20" style="margin-bottom:12px;"><button class="btn full" id="promo-btn">Активировать</button></div><div class="card" style="text-align:center;font-size:12px;color:var(--text-dim);">💡 Промокоды создаются в админ-панели<br>Использовано: '+(P.usedPromo?P.usedPromo.length:0)+' кодов</div>';
+    var runPromo = function(){ usePromo($('promo-in').value); $('promo-in').value=''; };
+    $('promo-btn').onclick = runPromo;
+    $('promo-in').onkeypress = function(e){ if(e.key==='Enter') runPromo(); };
+}
+
+function renderProfile(){
+    var el=$('p-profile'); if(!el) return;
+    var hrs=Math.floor((Date.now()-P.created)/(3600000));
+    el.innerHTML = '<div class="profile-header"><div class="profile-avatar">'+P.avatar+'</div><div class="profile-name">'+P.name+'</div><div class="profile-id">ID: '+P.id+'</div><div style="margin-top:12px;"><div class="progress-bar"><div class="progress-fill green" style="width:'+(P.xp/(P.lvl*80)*100)+'%"></div></div>Уровень '+P.lvl+' • '+P.xp+'/'+(P.lvl*80)+' XP</div></div><div class="stats-grid"><div class="stat-item"><div class="stat-value">'+P.kills+'</div><div class="stat-label">Убийств</div></div><div class="stat-item"><div class="stat-value">'+P.maxWave+'</div><div class="stat-label">Макс волна</div></div><div class="stat-item"><div class="stat-value">'+P.bossKills+'</div><div class="stat-label">Боссов</div></div><div class="stat-item"><div class="stat-value">'+P.games+'</div><div class="stat-label">Игр</div></div><div class="stat-item"><div class="stat-value">'+P.weapons.length+'</div><div class="stat-label">Оружий</div></div><div class="stat-item"><div class="stat-value">'+hrs+'ч</div><div class="stat-label">В игре</div></div></div><div class="section" style="margin-top:20px;"><div class="section-title">✏️ Имя</div><input type="text" class="input" id="name-in" placeholder="'+P.name+'" maxlength="12" style="margin-bottom:10px;"><button class="btn full" id="name-btn">Сохранить</button></div><div class="section"><div class="section-title">🎭 Аватар</div><div id="avatar-list" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;"></div></div>';
+    
+    var avatars=['🧟','👨','👩','🧔','👴','🦸','🧙','🤖','👽','💀','🎃','👻'];
+    var list=$('avatar-list');
+    avatars.forEach(a => {
+        var btn=document.createElement('button');
+        btn.className='btn '+(P.avatar===a?'':'secondary');
+        btn.style.cssText='font-size:24px;padding:10px 14px;';
+        btn.textContent=a; btn.dataset.av=a; list.appendChild(btn);
+    });
+    list.onclick=function(e){
+        if(e.target.dataset.av){ P.avatar=e.target.dataset.av; saveGame(); toast('Аватар изменён!'); render(); }
+    };
+    $('name-btn').onclick=function(){
+        var v=$('name-in').value.trim();
+        if(v.length>=2&&v.length<=12){ P.name=v; saveGame(); toast('Имя изменено!'); render(); }
+        else toast('Имя 2-12 символов!','error');
+    };
+}
+
+function buyWeapon(id){
+    var w=WEAPONS.find(x=>x.id===id);
+    if(!w) return;
+    if(P.weapons.some(pw=>pw.id===id)) return toast('Уже есть!','error');
+    if(P.money<w.p) return toast('Мало монет!','error');
+    
+    P.money -= w.p;
+    P.weapons.push({id:id, dur:w.m});
+    toast('Куплено: '+w.i+' '+w.n+'!');    checkAchievements(); saveGame(); updHeader(); renderShop(); renderInv();
+}
+
+function buyWeaponR(id){
+    var w=WEAPONS.find(x=>x.id===id);
+    if(!w) return;
+    if(P.weapons.some(pw=>pw.id===id)) return toast('Уже есть!','error');
+    if(P.rainbow<w.r) return toast('Мало Rainbow!','error');
+    
+    P.rainbow -= w.r;
+    P.weapons.push({id:id, dur:w.m});
+    toast('Куплено: '+w.i+' '+w.n+'!','gold');
+    checkAchievements(); saveGame(); updHeader(); renderLimited(); renderInv();
+}
+
+function repairWeapon(idx){
+    var pw=P.weapons[idx]; if(!pw) return;
+    var w=WEAPONS.find(x=>x.id===pw.id);
+    if(!w||w.m===-1) return;
+    var cost=Math.ceil((w.m-pw.dur)*1.5);
+    if(P.money<cost) return toast('Мало монет!','error');
+    P.money-=cost; pw.dur=w.m;
+    toast('Починено за '+cost+'💰!'); saveGame(); updHeader(); renderInv();
+}
+
+function usePromo(code){
+    code=code.toUpperCase().trim();
+    if(!code) return toast('Введите код!','error');
+    if(!P.usedPromo) P.usedPromo=[];
+    if(P.usedPromo.includes(code)) return toast('Уже использован!','error');
+    
+    var g=getGlobal(), pr=g.promo?g.promo.find(p=>p.code===code):null;
+    if(!pr) return toast('Неверный код!','error');
+    if(pr.maxUses>0 && (pr.uses||0)>=pr.maxUses) return toast('Код исчерпан!','error');
+    
+    var msg='';
+    if(pr.type==='money'){ P.money+=pr.value; msg='+'+pr.value+'💰'; }
+    else if(pr.type==='rainbow'){ P.rainbow+=pr.value; msg='+'+pr.value+'🌈'; }
+    else if(pr.type==='bp_xp'){ addBPXP(pr.value); msg='+'+pr.value+' BP XP'; }
+    else if(pr.type==='weapon'){
+        var w=WEAPONS[pr.value];
+        if(w && !P.weapons.some(pw=>pw.id===w.id)){ P.weapons.push({id:w.id,dur:w.m}); msg='Оружие: '+w.i+' '+w.n; }
+        else{ P.money+=1000; msg='+1000💰'; }
+    }
+    
+    pr.uses=(pr.uses||0)+1;
+    try{ localStorage.setItem(GLOBAL_KEY,JSON.stringify(g)); }catch(e){}
+    P.usedPromo.push(code);
+    toast(msg,'gold'); saveGame(); updHeader(); renderPromo(); renderInv();
+}
+function addBPXP(x){
+    if(!P.bp) P.bp={lvl:0,xp:0,claimed:[]};
+    P.bp.xp+=x;
+    for(var i=0;i<BP_REWARDS.length;i++){
+        if(P.bp.xp>=BP_REWARDS[i].x && P.bp.lvl<BP_REWARDS[i].l){
+            P.bp.lvl=BP_REWARDS[i].l; toast('🎖️ BP Уровень '+P.bp.lvl+'!','gold');
+        }
+    }
+    saveGame();
+}
+
+function claimBP(lvl){
+    if(!P.bp) P.bp={lvl:0,xp:0,claimed:[]};
+    if(P.bp.claimed.includes(lvl)) return toast('Уже получено!','error');
+    if(P.bp.lvl<lvl) return toast('Уровень не достигнут!','error');
+    var r=BP_REWARDS.find(x=>x.l===lvl); if(!r) return;
+    if(r.t==='c') P.money+=r.v;
+    else if(r.t==='r') P.rainbow+=r.v;
+    else if(r.t==='w'){
+        var w=WEAPONS[r.v];
+        if(w && !P.weapons.some(pw=>pw.id===w.id)) P.weapons.push({id:w.id,dur:w.m});
+        else P.money+=2000;
+    }
+    P.bp.claimed.push(lvl); toast('Получено: '+r.d+'!','gold'); saveGame(); updHeader(); renderBP(); renderInv();
+}
+
+function claimDaily(){
+    var today=new Date().setHours(0,0,0,0), lastDay=new Date(P.daily.last||0).setHours(0,0,0,0), yesterday=today-86400000;
+    P.daily.streak = (lastDay>=yesterday&&lastDay<today) ? Math.min((P.daily.streak||0)+1,7) : 1;
+    var reward=DAILY[Math.min(P.daily.streak-1,6)], rainbowB=P.daily.streak>=7?5:0;
+    P.money+=reward; if(rainbowB) P.rainbow+=rainbowB;
+    P.daily.last=Date.now();
+    toast('+'+reward+'💰'+(rainbowB?' +'+rainbowB+'🌈':'')+' Серия: '+P.daily.streak,'gold');
+    saveGame(); updHeader(); renderDaily();
+}
+
+function checkAchievements(){
+    if(!P.achieve) P.achieve=[];
+    ACHIEVEMENTS.forEach(a => {
+        if(P.achieve.includes(a.id)) return;
+        var prog = a.k==='kills'?P.kills:a.k==='maxWave'?P.maxWave:a.k==='bossKills'?P.bossKills:a.k==='money'?P.money:a.k==='weaponCount'?P.weapons.length:0;
+        if(prog>=a.g){ P.achieve.push(a.id); P.rainbow+=a.r; toast('🏆 '+a.n+'! +'+a.r+'🌈','gold'); }
+    });
+    saveGame();
+}
+
+function startBattle(mode){
+    B={on:true,mode:mode,wave:0,z:null,sel:0,cds:{},tmr:null,time:60,combo:0,lastHit:0};
+    P.games++; goPage('battle'); nextWave();}
+
+function nextWave(){
+    B.wave++;
+    var zIdx = Math.min(Math.floor(B.wave/4), 3);
+    if(B.mode==='boss'&&B.wave>=6) zIdx=4;
+    if(B.mode==='night') zIdx=Math.min(zIdx+1,4);
+    var z=ZOMBIES[zIdx], mult=B.mode==='night'?1.5:1, waveMult=1+B.wave*0.08;
+    B.z={id:z.id,n:z.n,i:z.i,hp:Math.ceil(z.hp*waveMult*mult),maxHp:Math.ceil(z.hp*waveMult*mult),c:z.c,x:z.x,rb:z.rb};
+    
+    if(B.mode==='time'&&!B.tmr){
+        B.tmr=setInterval(()=>{
+            B.time--;
+            if(B.time<=0) endBattle(true);
+            renderBattle();
+        },1000);
+    }
+    renderBattle();
+}
+
+function renderBattle(){
+    var el=$('p-battle'); if(!el||!B.on){ if(el) el.innerHTML=''; return; }
+    var z=B.z, hpPct=z?(z.hp/z.maxHp)*100:0;
+    var h='<button class="back-btn" id="exit-b">⬅ Выйти</button>';
+    h+='<div class="wave-display">🌊 Волна '+B.wave+'</div>';
+    if(B.mode==='time') h+='<div class="timer-display">⏱️ '+B.time+'</div>';
+    h+='<div class="battle-area" id="battle-area">';
+    if(B.combo>=3) h+='<div class="combo-display">🔥 x'+B.combo+'</div>';
+    h+='<div class="zombie-name">'+(z?z.n:'')+'</div><div class="zombie-sprite">'+(z?z.i:'🧟')+'</div><div class="hp-bar"><div class="hp-fill" style="width:'+Math.max(0,hpPct)+'%"></div></div><div class="zombie-hp">'+(z?Math.ceil(z.hp):0)+' / '+(z?z.maxHp:0)+' HP</div></div>';
+    
+    h+='<div class="weapon-bar">';
+    P.weapons.forEach((pw,i) => {
+        var w=WEAPONS.find(x=>x.id===pw.id); if(!w) return;
+        var broken=w.m!==-1&&pw.dur<=0, cdEnd=B.cds[w.id]||0, now=Date.now(), inCd=now<cdEnd;
+        var cdSec=inCd?Math.ceil((cdEnd-now)/1000):0, durPct=w.m===-1?100:(pw.dur/w.m)*100;
+        h+='<div class="weapon-slot'+(i===B.sel?' selected':'')+(broken?' broken':'')+(inCd?' cooldown':'')+'" data-w="'+i+'"><div class="weapon-slot-icon">'+w.i+'</div><div class="weapon-slot-name">'+w.n+'</div>';
+        if(inCd) h+='<div class="weapon-slot-cd">'+cdSec+'</div>';
+        if(w.m!==-1) h+='<div class="weapon-dur"><div class="weapon-dur-fill'+(durPct<30?' low':'')+'" style="width:'+durPct+'%"></div></div>';
+        h+='</div>';
+    });
+    h+='</div><button class="attack-btn" id="atk-btn">⚔️ АТАКА</button>';
+    h+='<div class="card" style="text-align:center;margin-top:12px;"><span style="color:var(--gold);">💰 '+fmt(P.money)+'</span> • <span style="color:var(--rainbow);">🌈 '+P.rainbow+'</span> • <span style="color:var(--accent-light);">⭐ '+P.xp+'/'+(P.lvl*80)+'</span></div>';
+    el.innerHTML=h;
+    
+    $('exit-b').onclick=()=>{ if(confirm('Выйти из боя?')) endBattle(false); };
+    $('atk-btn').onclick=attack;
+    el.querySelectorAll('[data-w]').forEach((slot,i)=>{ slot.onclick=()=>{ B.sel=i; renderBattle(); }; });
+}
+
+function attack(){    if(!B.on||!B.z) return;
+    var pw=P.weapons[B.sel]; if(!pw) return;
+    var w=WEAPONS.find(x=>x.id===pw.id); if(!w) return;
+    var now=Date.now();
+    if(B.cds[w.id]&&now<B.cds[w.id]) return;
+    if(w.m!==-1&&pw.dur<=0) return toast('Оружие сломано!','error');
+    
+    B.cds[w.id]=now+w.cd;
+    B.combo = (now-B.lastHit<1500)?B.combo+1:1;
+    B.lastHit=now;
+    
+    var dmg=w.d*(1+P.lvl*0.04);
+    if(B.combo>=3) dmg*=1+(B.combo-2)*0.1;
+    if(B.mode==='arena') dmg*=1.2;
+    dmg=Math.ceil(dmg);
+    
+    B.z.hp-=dmg;
+    if(w.m!==-1) pw.dur--;
+    
+    showDamage(dmg);
+    if(B.z.hp<=0) killZombie();
+    renderBattle(); saveGame();
+}
+
+function showDamage(d){
+    var area=$('battle-area'); if(!area) return;
+    var pop=document.createElement('div'); pop.className='damage-popup'; pop.textContent='-'+d;
+    pop.style.left=(Math.random()*60+20)+'%'; pop.style.top='40%';
+    area.appendChild(pop); setTimeout(()=>pop.remove(),800);
+}
+
+function killZombie(){
+    var z=B.z, coinMult=B.mode==='time'?2:(B.mode==='night'?1.5:1), rbMult=B.mode==='night'?2:1;
+    var coins=Math.ceil(z.c*coinMult), rb=Math.ceil(z.rb*rbMult);
+    P.money+=coins; P.rainbow+=rb; P.xp+=z.x; P.kills++;
+    addBPXP(1);
+    if(z.id===4){ P.bossKills++; P.rainbow+=15; toast('+15 🌈 за босса!','gold'); }
+    while(P.xp>=P.lvl*80){ P.xp-=P.lvl*80; P.lvl++; P.rainbow+=3; toast('🎉 Уровень '+P.lvl+'! +3 🌈','gold'); }
+    if(P.maxWave<B.wave) P.maxWave=B.wave;
+    addBPXP(3); checkAchievements();
+    if(B.mode==='boss'&&B.wave>=6&&z.id===4) endBattle(true);
+    else setTimeout(nextWave,600);
+    saveGame(); updHeader();
+}
+
+function endBattle(win){
+    B.on=false; if(B.tmr){ clearInterval(B.tmr); B.tmr=null; }
+    if(win){ var bonus=B.wave*10; P.money+=bonus; toast('🏆 Победа! Волна '+B.wave+', +'+bonus+'💰','gold'); }
+    else toast('💀 Поражение на волне '+B.wave,'error');
+    saveGame(); goPage('home'); renderAll();}
+
+function init(){
+    try{
+        if(checkBan()) return;
+        if(checkMaint()) return;
+        P = loadGame();
+        if(!P){ P=newPlayer(); toast('🎁 Добро пожаловать!','gold'); }
+        // Гарантируем структуру данных
+        P.bp=P.bp||{lvl:0,xp:0,claimed:[]}; P.bp.claimed=P.bp.claimed||[];
+        P.daily=P.daily||{last:0,streak:0};
+        P.achieve=P.achieve||[]; P.usedPromo=P.usedPromo||[];
+        P.rainbow=P.rainbow||0; P.weapons=P.weapons||[{id:0,dur:-1}];
+        
+        saveGame(); render(); checkAnn();
+        setInterval(checkAnn, 15000);
+        setInterval(()=>{ checkMaint(); }, 15000);
+        setInterval(saveGame, 20000);
+        
+        $('close-ann').onclick=()=>{
+            var g=getGlobal(); if(g.ann) localStorage.setItem('zgz_last_ann',String(g.ann.ts));
+            $('announcement').classList.remove('show');
+        };
+        window.addEventListener('storage',e=>{ if(e.key===GLOBAL_KEY){ checkAnn(); checkMaint(); } });
+    }catch(e){
+        console.error('Init failed:', e);
+        toast('Ошибка загрузки','error');
+    }
+}
+
+// Безопасный запуск после загрузки DOM
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>
